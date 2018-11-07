@@ -126,7 +126,7 @@ def run_esphomeflasher(argv):
                 print("Serial port closed!")
                 return
             text = raw.decode(errors='ignore')
-            ANSI_REGEX.sub('', text)
+            text = ANSI_REGEX.sub('', text)
             line = text.replace('\r', '').replace('\n', '')
             time = datetime.now().time().strftime('[%H:%M:%S]')
             message = time + line
