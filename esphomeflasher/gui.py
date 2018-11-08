@@ -59,8 +59,6 @@ class MainFrame(wx.Frame):
         self._firmware = None
         self._port = None
 
-        self._build_status_bar()
-        self._build_menu_bar()
         self._init_ui()
 
         sys.stdout = RedirectText(self.console_ctrl)
@@ -141,30 +139,6 @@ class MainFrame(wx.Frame):
         if not ports:
             ports.append("")
         return ports
-
-    def _build_status_bar(self):
-        self.statusBar = self.CreateStatusBar(2, wx.STB_SIZEGRIP)
-        self.statusBar.SetStatusWidths([-2, -1])
-        status_text = "Welcome to esphomeflasher (based on PyFlasher)"
-        self.statusBar.SetStatusText(status_text, 0)
-
-    def _build_menu_bar(self):
-        self.menuBar = wx.MenuBar()
-
-        # File menu
-        file_menu = wx.Menu()
-        wx.App.SetMacExitMenuItemId(wx.ID_EXIT)
-        exit_item = file_menu.Append(wx.ID_EXIT, "E&xit\tCtrl-Q", "Exit esphomeflasher")
-        exit_item.SetBitmap(Exit.GetBitmap())
-        self.Bind(wx.EVT_MENU, self._on_exit_app, exit_item)
-        self.menuBar.Append(file_menu, "&File")
-
-        # Help menu
-        help_menu = wx.Menu()
-        help_menu.Append(wx.ID_ABOUT, '&About esphomeflasher', 'About')
-        self.menuBar.Append(help_menu, '&Help')
-
-        self.SetMenuBar(self.menuBar)
 
     # Menu methods
     def _on_exit_app(self, event):
