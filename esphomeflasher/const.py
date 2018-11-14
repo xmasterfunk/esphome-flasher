@@ -3,11 +3,8 @@ import re
 __version__ = "1.0.0"
 
 ESP32_DEFAULT_OTA_DATA = 'https://raw.githubusercontent.com/espressif/arduino-esp32/1.0.0/tools/partitions/boot_app0.bin'
-# The latest bootloader image seems to work with older firmwares, but the "stable" bootloader
-# doesn't work with firmwares generated with the latest esp-idf
 ESP32_DEFAULT_BOOTLOADER_FORMAT = 'https://raw.githubusercontent.com/espressif/arduino-esp32/' \
-                                  '96822d783f3ab6a56a69b227ba4d1a1a36c66268/tools/sdk/' \
-                                  'bin/bootloader_$FLASH_MODE$_$FLASH_FREQ$.bin'
+                                  '1.0.0/tools/sdk/bin/bootloader_$FLASH_MODE$_$FLASH_FREQ$.bin'
 ESP32_DEFAULT_PARTITIONS = 'https://raw.githubusercontent.com/OttoWinter/esphomeflasher/master/partitions.bin'
 
 # https://stackoverflow.com/a/3809435/8924614

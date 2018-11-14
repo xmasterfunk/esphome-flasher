@@ -91,14 +91,17 @@ def run_esphomeflasher(argv):
     flash_size = detect_flash_size(stub_chip)
     print(" - Flash Size: {}".format(flash_size))
 
+    mock_args = configure_write_flash_args(info, firmware, flash_size,
+                                           args.bootloader, args.partitions,
+                                           args.otadata)
+
+    print(" - Flash Mode: {}".format(mock_args.flash_mode))
+    print(" - Flash Frequency: {}Hz".format(mock_args.flash_freq.upper()))
+
     try:
         stub_chip.flash_set_parameters(esptool.flash_size_bytes(flash_size))
     except esptool.FatalError as err:
         raise EsphomeflasherError("Error setting flash parameters: {}".format(err))
-
-    mock_args = configure_write_flash_args(info, firmware, flash_size,
-                                           args.bootloader, args.partitions,
-                                           args.otadata)
 
     if not args.no_erase:
         try:

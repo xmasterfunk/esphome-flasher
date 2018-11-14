@@ -12,13 +12,13 @@ class EsphomeflasherError(Exception):
 
 
 class MockEsptoolArgs(object):
-    def __init__(self, flash_size, addr_filename):
+    def __init__(self, flash_size, addr_filename, flash_mode, flash_freq):
         self.compress = True
         self.no_compress = False
         self.flash_size = flash_size
         self.addr_filename = addr_filename
-        self.flash_mode = 'keep'
-        self.flash_freq = 'keep'
+        self.flash_mode = flash_mode
+        self.flash_freq = flash_freq
         self.no_stub = False
         self.verify = False
 
@@ -180,7 +180,7 @@ def configure_write_flash_args(info, firmware_path, flash_size,
         addr_filename.append((0x10000, firmware))
     else:
         addr_filename.append((0x0, firmware))
-    return MockEsptoolArgs(flash_size, addr_filename)
+    return MockEsptoolArgs(flash_size, addr_filename, flash_mode, flash_freq)
 
 
 def detect_chip(port, force_esp8266=False, force_esp32=False):
