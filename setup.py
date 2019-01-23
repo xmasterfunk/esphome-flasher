@@ -22,7 +22,7 @@ GITHUB_URL = 'https://github.com/{}'.format(GITHUB_PATH)
 DOWNLOAD_URL = '{}/archive/{}.zip'.format(GITHUB_URL, const.__version__)
 
 REQUIRES = [
-    'esptool>=2.3.1',
+    'esptool==2.5.1',
     'requests',
 ]
 
