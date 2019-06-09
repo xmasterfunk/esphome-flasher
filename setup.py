@@ -7,12 +7,12 @@ from esphomeflasher import const
 PROJECT_NAME = 'esphomeflasher'
 PROJECT_PACKAGE_NAME = 'esphomeflasher'
 PROJECT_LICENSE = 'MIT'
-PROJECT_AUTHOR = 'Otto Winter'
-PROJECT_COPYRIGHT = '2018, Otto Winter'
-PROJECT_URL = 'https://esphomelib.com/esphomeyaml/guides/esphomeflasher.html'
-PROJECT_EMAIL = 'contact@otto-winter.com'
+PROJECT_AUTHOR = 'ESPHome'
+PROJECT_COPYRIGHT = '2019, ESPHome'
+PROJECT_URL = 'https://esphome.io/guides/faq.html'
+PROJECT_EMAIL = 'contact@esphome.io'
 
-PROJECT_GITHUB_USERNAME = 'OttoWinter'
+PROJECT_GITHUB_USERNAME = 'esphome'
 PROJECT_GITHUB_REPOSITORY = 'esphomeflasher'
 
 PYPI_URL = 'https://pypi.python.org/pypi/{}'.format(PROJECT_PACKAGE_NAME)
@@ -22,8 +22,9 @@ GITHUB_URL = 'https://github.com/{}'.format(GITHUB_PATH)
 DOWNLOAD_URL = '{}/archive/{}.zip'.format(GITHUB_URL, const.__version__)
 
 REQUIRES = [
-    'esptool==2.5.1',
-    'requests',
+    'wxpython>=4.0,<5.0',
+    'esptool==2.6',
+    'requests>=2.0,<3',
 ]
 
 setup(

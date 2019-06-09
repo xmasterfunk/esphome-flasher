@@ -21,6 +21,7 @@ class MockEsptoolArgs(object):
         self.flash_freq = flash_freq
         self.no_stub = False
         self.verify = False
+        self.erase_all = False
 
 
 class ChipInfo(object):

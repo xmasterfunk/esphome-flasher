@@ -2,7 +2,6 @@ from __future__ import print_function
 
 import argparse
 from datetime import datetime
-import re
 import sys
 
 import esptool
@@ -35,6 +34,7 @@ def parse_args(argv):
     parser.add_argument('--no-erase',
                         help="Do not erase flash before flashing",
                         action='store_true')
+    parser.add_argument('--show-logs', help="Only show logs", action='store_true')
     parser.add_argument('binary', help="The binary image to flash.")
 
     return parser.parse_args(argv[1:])
@@ -57,16 +57,38 @@ def select_port(args):
     return ports[0][0]
 
 
-ANSI_REGEX = re.compile(r"\033\[[0-9;]*m")
+def show_logs(serial_port):
+    print("Showing logs:")
+    with serial_port:
+        while True:
+            try:
+                raw = serial_port.readline()
+            except serial.SerialException:
+                print("Serial port closed!")
+                return
+            text = raw.decode(errors='ignore')
+            line = text.replace('\r', '').replace('\n', '')
+            time = datetime.now().time().strftime('[%H:%M:%S]')
+            message = time + line
+            try:
+                print(message)
+            except UnicodeEncodeError:
+                print(message.encode('ascii', 'backslashreplace'))
 
 
 def run_esphomeflasher(argv):
     args = parse_args(argv)
+    port = select_port(args)
+
+    if args.show_logs:
+        serial_port = serial.Serial(port, baudrate=115200)
+        show_logs(serial_port)
+        return
+
     try:
         firmware = open(args.binary, 'rb')
     except IOError as err:
         raise EsphomeflasherError("Error opening binary: {}".format(err))
-    port = select_port(args)
     chip = detect_chip(port, args.esp8266, args.esp32)
     info = read_chip_info(chip)
 
@@ -120,23 +142,7 @@ def run_esphomeflasher(argv):
     print("Done! Flashing is complete!")
     print()
 
-    print("Showing logs:")
-    with stub_chip._port as ser:
-        while True:
-            try:
-                raw = ser.readline()
-            except serial.SerialException:
-                print("Serial port closed!")
-                return
-            text = raw.decode(errors='ignore')
-            text = ANSI_REGEX.sub('', text)
-            line = text.replace('\r', '').replace('\n', '')
-            time = datetime.now().time().strftime('[%H:%M:%S]')
-            message = time + line
-            try:
-                print(message)
-            except UnicodeEncodeError:
-                print(message.encode('ascii', 'backslashreplace'))
+    show_logs(stub_chip._port)
 
 
 def main():

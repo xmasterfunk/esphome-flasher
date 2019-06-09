@@ -1,5 +1,5 @@
 # This GUI is a fork of the brilliant https://github.com/marcelstoer/nodemcu-pyflasher
-
+import re
 import sys
 import threading
 
@@ -12,39 +12,154 @@ import wx.lib.mixins.inspection
 from esphomeflasher.helpers import list_serial_ports
 
 
+COLOR_RE = re.compile(r'(?:\033)(?:\[(.*?)[@-~]|\].*?(?:\007|\033\\))')
+COLORS = {
+    'black': wx.BLACK,
+    'red': wx.RED,
+    'green': wx.GREEN,
+    'yellow': wx.YELLOW,
+    'blue': wx.BLUE,
+    'magenta': wx.Colour(255, 0, 255),
+    'cyan': wx.CYAN,
+    'white': wx.WHITE,
+}
+FORE_COLORS = {**COLORS, None: wx.WHITE}
+BACK_COLORS = {**COLORS, None: wx.BLACK}
+
+
 # See discussion at http://stackoverflow.com/q/41101897/131929
 class RedirectText:
     def __init__(self, text_ctrl):
         self._out = text_ctrl
+        self._i = 0
+        self._line = ''
+        self._bold = False
+        self._italic = False
+        self._underline = False
+        self._foreground = None
+        self._background = None
+        self._secret = False
+
+    def _add_content(self, value):
+        attr = wx.TextAttr()
+        if self._bold:
+            attr.SetFontWeight(wx.FONTWEIGHT_BOLD)
+        attr.SetTextColour(FORE_COLORS[self._foreground])
+        attr.SetBackgroundColour(BACK_COLORS[self._background])
+        wx.CallAfter(self._out.SetDefaultStyle, attr)
+        wx.CallAfter(self._out.AppendText, value)
+
+    def _write_line(self):
+        pos = 0
+        while True:
+            match = COLOR_RE.search(self._line, pos)
+            if match is None:
+                break
+
+            j = match.start()
+            self._add_content(self._line[pos:j])
+            pos = match.end()
+
+            for code in match.group(1).split(';'):
+                code = int(code)
+                if code == 0:
+                    self._bold = False
+                    self._italic = False
+                    self._underline = False
+                    self._foreground = None
+                    self._background = None
+                    self._secret = False
+                elif code == 1:
+                    self._bold = True
+                elif code == 3:
+                    self._italic = True
+                elif code == 4:
+                    self._underline = True
+                elif code == 5:
+                    self._secret = True
+                elif code == 6:
+                    self._secret = False
+                elif code == 22:
+                    self._bold = False
+                elif code == 23:
+                    self._italic = False
+                elif code == 24:
+                    self._underline = False
+                elif code == 30:
+                    self._foreground = 'black'
+                elif code == 31:
+                    self._foreground = 'red'
+                elif code == 32:
+                    self._foreground = 'green'
+                elif code == 33:
+                    self._foreground = 'yellow'
+                elif code == 34:
+                    self._foreground = 'blue'
+                elif code == 35:
+                    self._foreground = 'magenta'
+                elif code == 36:
+                    self._foreground = 'cyan'
+                elif code == 37:
+                    self._foreground = 'white'
+                elif code == 39:
+                    self._foreground = None
+                elif code == 40:
+                    self._background = 'black'
+                elif code == 41:
+                    self._background = 'red'
+                elif code == 42:
+                    self._background = 'green'
+                elif code == 43:
+                    self._background = 'yellow'
+                elif code == 44:
+                    self._background = 'blue'
+                elif code == 45:
+                    self._background = 'magenta'
+                elif code == 46:
+                    self._background = 'cyan'
+                elif code == 47:
+                    self._background = 'white'
+                elif code == 49:
+                    self._background = None
+
+        self._add_content(self._line[pos:])
 
     def write(self, string):
-        if string.startswith("\r"):
-            # carriage return -> remove last line i.e. reset position to start of last line
-            current_value = self._out.GetValue()
-            last_newline = current_value.rfind("\n")
-            new_value = current_value[:last_newline + 1]  # preserve \n
-            new_value += string[1:]  # chop off leading \r
-            wx.CallAfter(self._out.SetValue, new_value)
-        else:
-            wx.CallAfter(self._out.AppendText, string)
+        for s in string:
+            if s == '\r':
+                current_value = self._out.GetValue()
+                last_newline = current_value.rfind("\n")
+                wx.CallAfter(self._out.Remove, last_newline + 1, len(current_value))
+                # self._line += '\n'
+                self._write_line()
+                self._line = ''
+                continue
+            self._line += s
+            if s == '\n':
+                self._write_line()
+                self._line = ''
+                continue
 
     def flush(self):
         pass
 
 
 class FlashingThread(threading.Thread):
-    def __init__(self, parent, firmware, port):
+    def __init__(self, parent, firmware, port, show_logs=False):
         threading.Thread.__init__(self)
         self.daemon = True
         self._parent = parent
         self._firmware = firmware
         self._port = port
+        self._show_logs = show_logs
 
     def run(self):
         try:
             from esphomeflasher.__main__ import run_esphomeflasher
 
             argv = ['esphomeflasher', '--port', self._port, self._firmware]
+            if self._show_logs:
+                argv.append('--show-logs')
             run_esphomeflasher(argv)
         except Exception as e:
             print("Unexpected error: {}".format(e))
@@ -53,7 +168,7 @@ class FlashingThread(threading.Thread):
 
 class MainFrame(wx.Frame):
     def __init__(self, parent, title):
-        wx.Frame.__init__(self, parent, -1, title, size=(700, 650),
+        wx.Frame.__init__(self, parent, -1, title, size=(725, 650),
                           style=wx.DEFAULT_FRAME_STYLE | wx.NO_FULL_REPAINT_ON_RESIZE)
 
         self._firmware = None
@@ -74,6 +189,11 @@ class MainFrame(wx.Frame):
         def on_clicked(event):
             self.console_ctrl.SetValue("")
             worker = FlashingThread(self, self._firmware, self._port)
+            worker.start()
+
+        def on_logs_clicked(event):
+            self.console_ctrl.SetValue("")
+            worker = FlashingThread(self, 'dummy', self._port, show_logs=True)
             worker.start()
 
         def on_select_port(event):
@@ -108,12 +228,15 @@ class MainFrame(wx.Frame):
         button = wx.Button(panel, -1, "Flash ESP")
         button.Bind(wx.EVT_BUTTON, on_clicked)
 
+        logs_button = wx.Button(panel, -1, "View Logs")
+        logs_button.Bind(wx.EVT_BUTTON, on_logs_clicked)
+
         self.console_ctrl = wx.TextCtrl(panel, style=wx.TE_MULTILINE | wx.TE_READONLY | wx.HSCROLL)
-        self.console_ctrl.SetFont(
-            wx.Font(13, wx.FONTFAMILY_TELETYPE, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL))
+        self.console_ctrl.SetFont(wx.Font((0, 13), wx.FONTFAMILY_TELETYPE, wx.FONTSTYLE_NORMAL,
+                                          wx.FONTWEIGHT_NORMAL))
         self.console_ctrl.SetBackgroundColour(wx.BLACK)
-        self.console_ctrl.SetForegroundColour(wx.RED)
-        self.console_ctrl.SetDefaultStyle(wx.TextAttr(wx.RED))
+        self.console_ctrl.SetForegroundColour(wx.WHITE)
+        self.console_ctrl.SetDefaultStyle(wx.TextAttr(wx.WHITE))
 
         port_label = wx.StaticText(panel, label="Serial port")
         file_label = wx.StaticText(panel, label="Firmware")
@@ -121,11 +244,18 @@ class MainFrame(wx.Frame):
         console_label = wx.StaticText(panel, label="Console")
 
         fgs.AddMany([
+            # Port selection row
             port_label, (serial_boxsizer, 1, wx.EXPAND),
+            # Firmware selection row (growable)
             file_label, (file_picker, 1, wx.EXPAND),
+            # Flash ESP button
             (wx.StaticText(panel, label="")), (button, 1, wx.EXPAND),
-            (console_label, 1, wx.EXPAND), (self.console_ctrl, 1, wx.EXPAND)])
-        fgs.AddGrowableRow(3, 1)
+            # View Logs button
+            (wx.StaticText(panel, label="")), (logs_button, 1, wx.EXPAND),
+            # Console View (growable)
+            (console_label, 1, wx.EXPAND), (self.console_ctrl, 1, wx.EXPAND),
+        ])
+        fgs.AddGrowableRow(4, 1)
         fgs.AddGrowableCol(1, 1)
         hbox.Add(fgs, proportion=2, flag=wx.ALL | wx.EXPAND, border=15)
         panel.SetSizer(hbox)
@@ -151,9 +281,9 @@ class MainFrame(wx.Frame):
 class App(wx.App, wx.lib.mixins.inspection.InspectionMixin):
     def OnInit(self):
         wx.SystemOptions.SetOption("mac.window-plain-transition", 1)
-        self.SetAppName("esphomeflasher")
+        self.SetAppName("esphome-flasher (Based on NodeMCU PyFlasher)")
 
-        frame = MainFrame(None, "esphomeflasher")
+        frame = MainFrame(None, "esphome-flasher (Based on NodeMCU PyFlasher)")
         frame.Show()
 
         return True
