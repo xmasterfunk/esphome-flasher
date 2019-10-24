@@ -29,7 +29,7 @@ jobs:
       - uses: actions/upload-artifact@master
         with:
           name: Windows
-          path: dist
+          path: dist/ESPHome-Flasher.exe
 
   build-ubuntu:
     runs-on: ubuntu-latest
@@ -43,7 +43,7 @@ jobs:
           architecture: 'x64'
       - name: Install dependencies
         run: |
-          sudo apt install python-wxgtk2.8
+          sudo apt install python-wxgtk3.0
       - name: Print Versions
         run: |
           python --version
@@ -89,4 +89,4 @@ jobs:
       - uses: actions/upload-artifact@master
         with:
           name: MacOS
-          path: dist
+          path: dist/ESPHome-Flasher.app
