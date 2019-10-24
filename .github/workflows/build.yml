@@ -13,13 +13,17 @@ jobs:
         with:
           python-version: '3.7'
           architecture: 'x64'
+      - name: Print Versions
+        run: |
+          python --version
+          pip --version
       - name: Install requirements
         run: |
-          pip3 install -r requirements_build.txt
-          pip3 install -e .
+          pip install -r requirements_build.txt
+          pip install -e .
       - name: Run PyInstaller
         run: |
-          python3 -m PyInstaller.__main__ -F -w -n ESPHome-Flasher -i icon.ico esphomeflasher\__main__.py
+          python -m PyInstaller.__main__ -F -w -n ESPHome-Flasher -i icon.ico esphomeflasher\__main__.py
       - name: See dist directory
         run: ls dist
       - uses: actions/upload-artifact@master
@@ -37,13 +41,20 @@ jobs:
         with:
           python-version: '3.7'
           architecture: 'x64'
+      - name: Install dependencies
+        run: |
+          sudo apt install python-wxgtk2.8
+      - name: Print Versions
+        run: |
+          python --version
+          pip --version
       - name: Install requirements
         run: |
-          pip3 install -r requirements_build.txt
-          pip3 install -e .
+          pip install -r requirements_build.txt
+          pip install -e .
       - name: Run PyInstaller
         run: |
-          python3 -m PyInstaller.__main__ -F -w -n ESPHome-Flasher -i icon.ico esphomeflasher/__main__.py
+          python -m PyInstaller.__main__ -F -w -n ESPHome-Flasher -i icon.ico esphomeflasher/__main__.py
       - name: See dist directory
         run: ls dist
       - uses: actions/upload-artifact@master
@@ -62,13 +73,17 @@ jobs:
         with:
           python-version: '3.7'
           architecture: 'x64'
+      - name: Print Versions
+        run: |
+          python --version
+          pip --version
       - name: Install requirements
         run: |
-          pip3 install -r requirements_build.txt
-          pip3 install -e .
+          pip install -r requirements_build.txt
+          pip install -e .
       - name: Run PyInstaller
         run: |
-          python3 -m PyInstaller.__main__ -F -w -n ESPHome-Flasher -i icon.icns esphomeflasher/__main__.py
+          python -m PyInstaller.__main__ -F -w -n ESPHome-Flasher -i icon.icns esphomeflasher/__main__.py
       - name: See dist directory
         run: ls dist
       - uses: actions/upload-artifact@master
