@@ -22,6 +22,8 @@ def parse_args(argv):
     group = parser.add_mutually_exclusive_group(required=False)
     group.add_argument('--esp8266', action='store_true')
     group.add_argument('--esp32', action='store_true')
+    group.add_argument('--upload-baud-rate', type=int, default=460800,
+                       help="Baud rate to upload with (not for logging)")
     parser.add_argument('--bootloader',
                         help="(ESP32-only) The bootloader to flash.",
                         default=ESP32_DEFAULT_BOOTLOADER_FORMAT)
@@ -109,6 +111,12 @@ def run_esphomeflasher(argv):
     print(" - MAC Address: {}".format(info.mac))
 
     stub_chip = chip_run_stub(chip)
+
+    if args.upload_baud_rate != 115200:
+        try:
+            stub_chip.change_baud(args.upload_baud_rate)
+        except esptool.FatalError as err:
+            raise EsphomeflasherError("Error changing ESP upload baud rate: {}".format(err))
 
     flash_size = detect_flash_size(stub_chip)
     print(" - Flash Size: {}".format(flash_size))
