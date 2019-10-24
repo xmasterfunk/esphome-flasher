@@ -3,6 +3,7 @@ from __future__ import print_function
 import argparse
 from datetime import datetime
 import sys
+import time
 
 import esptool
 import serial
@@ -149,6 +150,11 @@ def run_esphomeflasher(argv):
 
     print("Done! Flashing is complete!")
     print()
+
+    if args.upload_baud_rate != 115200:
+        stub_chip._port.baudrate = 115200
+        time.sleep(0.05)  # get rid of crap sent during baud rate change
+        stub_chip._port.flushInput()
 
     show_logs(stub_chip._port)
 
