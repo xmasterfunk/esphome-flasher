@@ -8,7 +8,7 @@ PROJECT_NAME = 'esphomeflasher'
 PROJECT_PACKAGE_NAME = 'esphomeflasher'
 PROJECT_LICENSE = 'MIT'
 PROJECT_AUTHOR = 'ESPHome'
-PROJECT_COPYRIGHT = '2019, ESPHome'
+PROJECT_COPYRIGHT = '2020, ESPHome'
 PROJECT_URL = 'https://esphome.io/guides/faq.html'
 PROJECT_EMAIL = 'contact@esphome.io'
 
