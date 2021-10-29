@@ -2,6 +2,7 @@ name: Release Assets Workflow
 
 on:
   release:
+    type: [created]
 
 jobs:
   build-windows:
