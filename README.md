@@ -1,3 +1,8 @@
+# Deprecated
+
+This project is deprecated in favour of browser based flashing with [ESP Web Tools](https://github.com/esphome/esp-web-tools). For example: https://web.esphome.io
+
+
 # ESPHome-Flasher
 
 ESPHome-Flasher is a utility app for the [ESPHome](https://esphome.io/)
